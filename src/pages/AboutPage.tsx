@@ -20,13 +20,13 @@ export const AboutPage: React.FC = () => {
         {/* Hero */}
         <div className="text-center max-w-3xl mx-auto space-y-4">
           <span className="text-xs uppercase font-extrabold tracking-wider text-blue-600 dark:text-blue-400">
-            About MediCare Healthcare System
+            About Shakib Hospital Healthcare System
           </span>
           <h1 className="text-3xl sm:text-5xl font-black tracking-tight text-slate-900 dark:text-white leading-tight">
             Revolutionizing Hospital Access & Patient Care Delivery
           </h1>
           <p className="text-sm sm:text-base text-slate-600 dark:text-slate-300 leading-relaxed">
-            MediCare is India's next-generation hospital appointment scheduling, digital OPD queue management, and patient healthcare record infrastructure designed to connect patients directly with top specialist doctors and NABH-accredited multi-specialty hospitals.
+            Shakib Hospital is India's next-generation hospital appointment scheduling, digital OPD queue management, and patient healthcare record infrastructure designed to connect patients directly with top specialist doctors and premier multi-specialty clinical departments.
           </p>
         </div>
 

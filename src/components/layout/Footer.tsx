@@ -55,11 +55,11 @@ export const Footer: React.FC = () => {
                 <HeartPulse className="w-5 h-5" />
               </div>
               <span className="font-extrabold text-xl text-white tracking-tight">
-                Medi<span className="text-blue-400">Care</span>
+                Shakib <span className="text-blue-400">Hospital</span>
               </span>
             </div>
             <p className="text-slate-400 leading-relaxed text-xs max-w-sm">
-              MediCare is a comprehensive digital hospital appointment & healthcare management system designed to connect patients seamlessly with verified medical specialists, NABH-accredited tertiary care hospitals, and instant diagnostic care.
+              Shakib Hospital is a comprehensive digital hospital appointment & healthcare management platform designed to connect patients seamlessly with verified medical specialists, advanced multi-specialty clinical departments, and instant diagnostic care.
             </p>
             <div className="flex flex-wrap gap-2 pt-1">
               <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-900 border border-slate-800 text-[11px] text-blue-400 font-medium">
@@ -126,10 +126,10 @@ export const Footer: React.FC = () => {
 
         {/* Bottom Attribution */}
         <div className="mt-12 pt-6 border-t border-slate-800/80 flex flex-col sm:flex-row items-center justify-between gap-4 text-slate-500">
-          <p>© {new Date().getFullYear()} MediCare Healthcare Management System. All rights reserved.</p>
+          <p>© {new Date().getFullYear()} Shakib Hospital & Healthcare Management System. All rights reserved.</p>
           <div className="flex items-center gap-2 text-slate-400">
             <Sparkles className="w-3.5 h-3.5 text-blue-400" />
-            <span>College BCA Capstone Project • Production Full-Stack Architecture</span>
+            <span>Super Speciality Hospital & OPD Care Network</span>
           </div>
         </div>
       </div>

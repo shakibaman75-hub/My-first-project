@@ -94,7 +94,7 @@ export const ContactPage: React.FC = () => {
                   <Mail className="w-4 h-4 text-blue-600 flex-shrink-0 mt-0.5" />
                   <div>
                     <span className="font-bold text-slate-900 dark:text-white block">Official Support Email:</span>
-                    <span className="text-slate-600 dark:text-slate-300">support@medicare-health.org</span>
+                    <span className="text-slate-600 dark:text-slate-300">support@shakibhospital.com</span>
                   </div>
                 </div>
 
@@ -102,7 +102,7 @@ export const ContactPage: React.FC = () => {
                   <MapPin className="w-4 h-4 text-blue-600 flex-shrink-0 mt-0.5" />
                   <div>
                     <span className="font-bold text-slate-900 dark:text-white block">National Operations Headquarters:</span>
-                    <span className="text-slate-600 dark:text-slate-300">MediCare Towers, 4th Floor, Connaught Place, New Delhi 110001</span>
+                    <span className="text-slate-600 dark:text-slate-300">Shakib Hospital Complex, Connaught Place, New Delhi 110001</span>
                   </div>
                 </div>
               </div>

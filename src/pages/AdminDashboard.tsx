@@ -60,14 +60,14 @@ export const AdminDashboard: React.FC = () => {
 
   // Business & Payment Settings State
   const [bizSettings, setBizSettings] = useState<IBusinessSettings>({
-    hospitalName: 'MediCare Multi-Speciality Hospital',
+    hospitalName: 'Shakib Hospital',
     bankName: 'HDFC Bank Ltd',
-    accountHolderName: 'MEDICARE HEALTHCARE PVT LTD',
+    accountHolderName: 'SHAKIB HEALTHCARE PVT LTD',
     accountNumber: '50200049281742',
     ifscCode: 'HDFC0001024',
     branch: 'Connaught Place, New Delhi',
-    businessUpiId: 'medicare.billing@okhdfcbank',
-    razorpayKeyId: 'rzp_test_medicare_hospital_key',
+    businessUpiId: 'shakib.hospital@okhdfcbank',
+    razorpayKeyId: 'rzp_test_shakib_hospital_key',
     merchantPanGst: 'AAACM1234F1Z5',
     isDirectUpiEnabled: true,
   });

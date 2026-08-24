@@ -105,7 +105,7 @@ export const LoginPage: React.FC = () => {
               <HeartPulse className="w-6 h-6" />
             </div>
             <span className="font-extrabold text-2xl tracking-tight text-slate-900 dark:text-white">
-              Medi<span className="text-blue-600 dark:text-blue-400">Care</span>
+              Shakib <span className="text-blue-600 dark:text-blue-400">Hospital</span>
             </span>
           </Link>
           <h2 className="text-xl font-black text-slate-900 dark:text-white">

@@ -97,7 +97,7 @@ export const RegisterPage: React.FC = () => {
         showToast('Registration Submitted', 'Doctor profile created! Awaiting admin medical license verification.', 'info');
         navigate('/doctor/dashboard');
       } else {
-        showToast('Registration Successful', 'Welcome to MediCare! You can now book appointments.', 'success');
+        showToast('Registration Successful', 'Welcome to Shakib Hospital! You can now book appointments.', 'success');
         navigate('/patient/dashboard');
       }
     } catch (err: any) {
@@ -117,12 +117,12 @@ export const RegisterPage: React.FC = () => {
               <HeartPulse className="w-6 h-6" />
             </div>
             <span className="font-extrabold text-2xl tracking-tight text-slate-900 dark:text-white">
-              Medi<span className="text-blue-600 dark:text-blue-400">Care</span>
+              Shakib <span className="text-blue-600 dark:text-blue-400">Hospital</span>
             </span>
           </Link>
           <h2 className="text-xl font-bold text-slate-900 dark:text-white">Create Your Account</h2>
           <p className="text-xs text-slate-500 dark:text-slate-400">
-            Join MediCare to access digital OPD appointments, prescriptions, and medical records.
+            Join Shakib Hospital to access digital OPD appointments, prescriptions, and medical records.
           </p>
         </div>
 

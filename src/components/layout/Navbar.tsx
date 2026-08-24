@@ -121,11 +121,11 @@ export const Navbar: React.FC = () => {
               <div>
                 <div className="flex items-center gap-1.5">
                   <span className="font-extrabold text-xl sm:text-2xl tracking-tight text-slate-900 dark:text-white">
-                    Medi<span className="text-blue-600 dark:text-blue-400">Care</span>
+                    Shakib <span className="text-blue-600 dark:text-blue-400">Hospital</span>
                   </span>
                 </div>
                 <p className="text-[10px] uppercase font-bold tracking-widest text-slate-400 dark:text-slate-500">
-                  Hospital Management
+                  Super Speciality Hospital
                 </p>
               </div>
             </Link>
