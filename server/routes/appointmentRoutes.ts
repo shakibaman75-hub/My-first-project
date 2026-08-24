@@ -57,6 +57,9 @@ router.post('/book', authenticateToken, (req: AuthRequest, res) => {
     const appointmentId = 'apt_' + Date.now();
     const orderId = 'order_MC' + Math.floor(1000000 + Math.random() * 9000000);
 
+    const tokenNumber = 'TK-' + Math.floor(1000 + Math.random() * 9000);
+    const queueTokenNumber = Math.floor(10 + Math.random() * 90);
+
     const newAppointment: IAppointment = {
       _id: appointmentId,
       patientId: req.user._id,
@@ -74,8 +77,11 @@ router.post('/book', authenticateToken, (req: AuthRequest, res) => {
       appointmentDate,
       appointmentTime: appointmentTime.trim(),
       amount: doctor.consultationFee,
+      consultationFee: doctor.consultationFee,
       paymentStatus: 'pending',
-      appointmentStatus: 'upcoming',
+      appointmentStatus: 'pending',
+      tokenNumber,
+      queueTokenNumber,
       orderId,
       reason: reason || 'General Consultation & Medical Examination',
       patientNotes,
@@ -83,13 +89,28 @@ router.post('/book', authenticateToken, (req: AuthRequest, res) => {
       updatedAt: new Date().toISOString(),
     };
 
+    // Ensure status is also set
+    (newAppointment as any).status = 'pending';
+
     db.appointments.unshift(newAppointment);
+
+    // Notify admins about new appointment booking
+    const adminUsers = db.users.filter((u) => u.role === 'admin');
+    adminUsers.forEach((adm) => {
+      db.addNotification(
+        adm._id,
+        'New Slot Booking Request',
+        `Patient ${newAppointment.patientName} requested a slot with ${doctor.name} on ${appointmentDate} at ${appointmentTime}. (Token #${tokenNumber})`,
+        'appointment',
+        '/admin/dashboard'
+      );
+    });
 
     db.logAction(
       'APPOINTMENT_CREATED',
       req.user.name,
       req.user.role,
-      `Booked appointment with ${doctor.name} on ${appointmentDate} at ${appointmentTime}`
+      `Booked appointment with ${doctor.name} on ${appointmentDate} at ${appointmentTime} (Token #${tokenNumber})`
     );
 
     return res.status(201).json({
@@ -360,13 +381,40 @@ router.put('/:id/status', authenticateToken, (req: AuthRequest, res) => {
       return res.status(404).json({ success: false, message: 'Appointment not found.' });
     }
 
-    if (status) appointment.appointmentStatus = status;
+    if (status) {
+      appointment.appointmentStatus = status;
+      (appointment as any).status = status;
+    }
     if (consultationNotes) appointment.consultationNotes = consultationNotes;
     if (prescription) appointment.prescription = prescription;
     if (rejectionReason) appointment.cancellationReason = rejectionReason;
+    
+    // Ensure token number exists
+    if (!appointment.tokenNumber) {
+      appointment.tokenNumber = 'TK-' + Math.floor(1000 + Math.random() * 9000);
+    }
+    if (!appointment.queueTokenNumber) {
+      appointment.queueTokenNumber = Math.floor(10 + Math.random() * 90);
+    }
+    
     appointment.updatedAt = new Date().toISOString();
 
-    if (status === 'completed') {
+    if (status === 'confirmed') {
+      db.addNotification(
+        appointment.patientId,
+        'Appointment Confirmed! ✅',
+        `Your slot with ${appointment.doctorName} on ${appointment.appointmentDate} at ${appointment.appointmentTime} has been confirmed by administration. Your Token number is #${appointment.tokenNumber}.`,
+        'appointment',
+        '/dashboard'
+      );
+      db.addNotification(
+        appointment.doctorId,
+        'Patient Slot Confirmed',
+        `Slot for patient ${appointment.patientName} on ${appointment.appointmentDate} at ${appointment.appointmentTime} has been confirmed. (Token #${appointment.tokenNumber})`,
+        'appointment',
+        '/doctor/dashboard'
+      );
+    } else if (status === 'completed') {
       db.addNotification(
         appointment.patientId,
         'Consultation Completed',
@@ -374,11 +422,11 @@ router.put('/:id/status', authenticateToken, (req: AuthRequest, res) => {
         'appointment',
         '/dashboard'
       );
-    } else if (status === 'rejected') {
+    } else if (status === 'rejected' || status === 'cancelled') {
       db.addNotification(
         appointment.patientId,
         'Appointment Request Declined',
-        `Your appointment request was declined: ${rejectionReason || 'Doctor unavailable'}. Refund has been initiated.`,
+        `Your appointment request was declined: ${rejectionReason || 'Slot unavailable'}. Refund has been initiated if applicable.`,
         'cancellation',
         '/dashboard'
       );

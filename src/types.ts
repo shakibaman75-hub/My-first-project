@@ -196,3 +196,15 @@ export interface ISystemLog {
   details: string;
   timestamp: string;
 }
+
+export interface IBusinessSettings {
+  hospitalName: string;
+  businessUpiId: string;
+  bankName: string;
+  accountHolderName: string;
+  accountNumber: string;
+  ifscCode: string;
+  branch: string;
+  razorpayKeyId?: string;
+  isLiveRazorpayConfigured?: boolean;
+}

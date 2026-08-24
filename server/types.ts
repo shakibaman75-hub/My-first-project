@@ -78,7 +78,7 @@ export interface IHospital {
 }
 
 export type PaymentStatus = 'pending' | 'paid' | 'failed' | 'refunded';
-export type AppointmentStatus = 'upcoming' | 'confirmed' | 'completed' | 'cancelled' | 'rejected';
+export type AppointmentStatus = 'upcoming' | 'pending' | 'confirmed' | 'completed' | 'cancelled' | 'rejected';
 
 export interface IAppointment {
   _id: string;
@@ -97,8 +97,12 @@ export interface IAppointment {
   appointmentDate: string; // YYYY-MM-DD
   appointmentTime: string; // "10:30 AM"
   amount: number;
+  consultationFee?: number;
+  tokenNumber?: string;
+  queueTokenNumber?: number | string;
   paymentStatus: PaymentStatus;
   appointmentStatus: AppointmentStatus;
+  status?: AppointmentStatus;
   paymentId?: string;
   orderId?: string;
   reason: string;
@@ -155,4 +159,16 @@ export interface ISystemLog {
   role: string;
   details: string;
   timestamp: string;
+}
+
+export interface IBusinessSettings {
+  hospitalName: string;
+  businessUpiId: string;
+  bankName: string;
+  accountHolderName: string;
+  accountNumber: string;
+  ifscCode: string;
+  branch: string;
+  razorpayKeyId?: string;
+  isLiveRazorpayConfigured?: boolean;
 }

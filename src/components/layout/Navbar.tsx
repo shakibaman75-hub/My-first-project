@@ -96,57 +96,14 @@ export const Navbar: React.FC = () => {
 
           <div className="flex items-center gap-3">
             <span className="text-[11px] text-slate-400 hidden lg:inline">NABH & NABL Accredited Healthcare Network</span>
-            <div className="relative" ref={demoMenuRef}>
-              <button
-                id="quick-demo-accounts-btn"
-                onClick={() => setDemoDropdownOpen(!demoDropdownOpen)}
-                className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-blue-500/20 text-blue-300 hover:bg-blue-500/30 border border-blue-500/30 text-[11px] font-semibold transition-all"
+            <div className="flex items-center gap-2">
+              <Link
+                to="/login?mode=admin"
+                className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 hover:bg-indigo-500/30 border border-indigo-500/30 text-[11px] font-semibold transition-all"
               >
-                <Sparkles className="w-3 h-3" />
-                <span>Demo Accounts</span>
-                <ChevronDown className="w-3 h-3" />
-              </button>
-
-              {demoDropdownOpen && (
-                <div className="absolute right-0 mt-1 w-52 bg-white dark:bg-slate-800 rounded-xl shadow-xl border border-slate-200 dark:border-slate-700 py-1.5 z-50 text-slate-800 dark:text-slate-200">
-                  <div className="px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-slate-400">
-                    Switch Test Persona
-                  </div>
-                  <button
-                    onClick={() => {
-                      quickDemoLogin('patient');
-                      setDemoDropdownOpen(false);
-                      navigate('/patient/dashboard');
-                    }}
-                    className="w-full text-left px-3 py-1.5 hover:bg-slate-100 dark:hover:bg-slate-700 text-xs flex items-center justify-between"
-                  >
-                    <span>👤 Patient Account</span>
-                    <span className="text-[10px] text-slate-400">Aman</span>
-                  </button>
-                  <button
-                    onClick={() => {
-                      quickDemoLogin('doctor');
-                      setDemoDropdownOpen(false);
-                      navigate('/doctor/dashboard');
-                    }}
-                    className="w-full text-left px-3 py-1.5 hover:bg-slate-100 dark:hover:bg-slate-700 text-xs flex items-center justify-between"
-                  >
-                    <span>🩺 Doctor (Cardiology)</span>
-                    <span className="text-[10px] text-slate-400">Dr. Sharma</span>
-                  </button>
-                  <button
-                    onClick={() => {
-                      quickDemoLogin('admin');
-                      setDemoDropdownOpen(false);
-                      navigate('/admin/dashboard');
-                    }}
-                    className="w-full text-left px-3 py-1.5 hover:bg-slate-100 dark:hover:bg-slate-700 text-xs flex items-center justify-between"
-                  >
-                    <span>🛡️ Super Admin</span>
-                    <span className="text-[10px] text-slate-400">Master</span>
-                  </button>
-                </div>
-              )}
+                <ShieldCheck className="w-3 h-3 text-indigo-400" />
+                <span>Admin Portal</span>
+              </Link>
             </div>
           </div>
         </div>

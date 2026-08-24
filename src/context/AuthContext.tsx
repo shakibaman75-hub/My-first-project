@@ -8,7 +8,7 @@ interface AuthContextType {
   token: string | null;
   isAuthenticated: boolean;
   isLoading: boolean;
-  login: (email: string, password?: string) => Promise<void>;
+  login: (email: string, password: string) => Promise<void>;
   register: (payload: any) => Promise<void>;
   quickDemoLogin: (role: UserRole) => Promise<void>;
   logout: () => void;
@@ -53,10 +53,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     refreshUser();
   }, []);
 
-  const login = async (email: string, password?: string) => {
+  const login = async (email: string, password: string) => {
+    if (!email?.trim() || !password) {
+      throw new Error('Please provide both email/phone and password.');
+    }
     setIsLoading(true);
     try {
-      const res = await api.login({ email, password: password || 'Password123' });
+      const res = await api.login({ email: email.trim(), password });
       if (res.success && res.token) {
         localStorage.setItem('medicare_token', res.token);
         setToken(res.token);
@@ -85,11 +88,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const quickDemoLogin = async (role: UserRole) => {
     if (role === 'patient') {
-      await login('patient@example.com', 'Password123');
+      await login('patient@example.com', 'Patient@123');
     } else if (role === 'doctor') {
-      await login('doctor@example.com', 'Password123');
+      await login('doctor@example.com', 'Doctor@123');
     } else if (role === 'admin') {
-      await login('admin@example.com', 'Admin123');
+      await login('admin@example.com', 'Admin@123');
     }
   };
 

@@ -20,6 +20,27 @@ class DatabaseStore {
   reviews: IReview[] = [];
   notifications: INotification[] = [];
   systemLogs: ISystemLog[] = [];
+  businessSettings: {
+    hospitalName: string;
+    businessUpiId: string;
+    bankName: string;
+    accountHolderName: string;
+    accountNumber: string;
+    ifscCode: string;
+    branch: string;
+    razorpayKeyId?: string;
+    isLiveRazorpayConfigured?: boolean;
+  } = {
+    hospitalName: 'MediCare Healthcare Center',
+    businessUpiId: 'medicare.billing@okhdfcbank',
+    bankName: 'HDFC Bank',
+    accountHolderName: 'MediCare Healthcare Services Pvt Ltd',
+    accountNumber: '50200012345678',
+    ifscCode: 'HDFC0001234',
+    branch: 'Medical Enclave, New Delhi',
+    razorpayKeyId: process.env.RAZORPAY_KEY_ID || '',
+    isLiveRazorpayConfigured: !!(process.env.RAZORPAY_KEY_ID && !process.env.RAZORPAY_KEY_ID.includes('demo') && !process.env.RAZORPAY_KEY_ID.includes('sample')),
+  };
 
   constructor() {
     this.seedInitialData();
@@ -27,9 +48,9 @@ class DatabaseStore {
 
   async seedInitialData() {
     const salt = await bcrypt.genSalt(10);
-    const patientHash = await bcrypt.hash('Password123', salt);
-    const doctorHash = await bcrypt.hash('Password123', salt);
-    const adminHash = await bcrypt.hash('Admin123', salt);
+    const patientHash = await bcrypt.hash('Patient@123', salt);
+    const doctorHash = await bcrypt.hash('Doctor@123', salt);
+    const adminHash = await bcrypt.hash('Admin@123', salt);
 
     // 1. Initial Hospitals
     this.hospitals = [

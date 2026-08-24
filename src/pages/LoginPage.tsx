@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import {
   HeartPulse,
   Mail,
@@ -11,7 +11,9 @@ import {
   ShieldCheck,
   User,
   Stethoscope,
-  KeyRound
+  KeyRound,
+  Check,
+  AlertCircle
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext.tsx';
 import { useNotifications } from '../context/NotificationContext.tsx';
@@ -19,9 +21,13 @@ import { api } from '../services/api.ts';
 
 export const LoginPage: React.FC = () => {
   const navigate = useNavigate();
-  const { login, quickDemoLogin } = useAuth();
+  const [searchParams] = useSearchParams();
+  const { login } = useAuth();
   const { showToast } = useNotifications();
 
+  const [loginMode, setLoginMode] = useState<'user' | 'admin'>(
+    searchParams.get('mode') === 'admin' ? 'admin' : 'user'
+  );
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -33,33 +39,41 @@ export const LoginPage: React.FC = () => {
   const [forgotEmail, setForgotEmail] = useState('');
   const [isSendingForgot, setIsSendingForgot] = useState(false);
 
+  const fillCredentials = (userEmail: string, userPass: string, mode: 'user' | 'admin' = 'user') => {
+    setEmail(userEmail);
+    setPassword(userPass);
+    setLoginMode(mode);
+    setError(null);
+    showToast('Credentials Filled', 'Click Sign In to authenticate securely.', 'info');
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email.trim()) return;
+    if (!email.trim() || !password) {
+      setError('Please provide both email/phone and password.');
+      return;
+    }
 
     setIsLoading(true);
     setError(null);
     try {
       await login(email.trim(), password);
       showToast('Welcome Back', 'Signed in successfully.', 'success');
-      navigate('/');
-    } catch (err: any) {
-      setError(err.message || 'Invalid email or password.');
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
-  const handleDemo = async (role: 'patient' | 'doctor' | 'admin') => {
-    setIsLoading(true);
-    try {
-      await quickDemoLogin(role);
-      showToast('Demo Login', `Signed in as ${role.toUpperCase()}`, 'success');
-      if (role === 'doctor') navigate('/doctor/dashboard');
-      else if (role === 'admin') navigate('/admin/dashboard');
-      else navigate('/patient/dashboard');
+      // Navigate according to destination or user role
+      const redirect = searchParams.get('redirect');
+      if (redirect) {
+        navigate(redirect);
+      } else if (loginMode === 'admin' || email.includes('admin')) {
+        navigate('/admin/dashboard');
+      } else if (email.includes('doctor')) {
+        navigate('/doctor/dashboard');
+      } else {
+        navigate('/patient/dashboard');
+      }
     } catch (err: any) {
-      setError(err.message || 'Failed to login with demo account.');
+      setError(err.message || 'Invalid email or password. Access denied.');
+      showToast('Authentication Failed', err.message || 'Check your credentials.', 'error');
     } finally {
       setIsLoading(false);
     }
@@ -72,7 +86,7 @@ export const LoginPage: React.FC = () => {
     setIsSendingForgot(true);
     try {
       const res = await api.forgotPassword(forgotEmail.trim());
-      showToast('Password Reset', res.message || 'Reset link sent.', 'info');
+      showToast('Password Reset', res.message || 'Reset link sent to your email.', 'info');
       setIsForgotModalOpen(false);
     } catch (err: any) {
       showToast('Error', err.message || 'Failed to request reset.', 'error');
@@ -87,86 +101,97 @@ export const LoginPage: React.FC = () => {
         {/* Brand Header */}
         <div className="text-center space-y-2">
           <Link to="/" className="inline-flex items-center gap-2.5">
-            <div className="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center text-white shadow-md shadow-blue-500/20">
+            <div className="w-11 h-11 rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center text-white shadow-lg shadow-blue-500/20">
               <HeartPulse className="w-6 h-6" />
             </div>
             <span className="font-extrabold text-2xl tracking-tight text-slate-900 dark:text-white">
               Medi<span className="text-blue-600 dark:text-blue-400">Care</span>
             </span>
           </Link>
-          <h2 className="text-xl font-bold text-slate-900 dark:text-white">Sign In to Your Account</h2>
+          <h2 className="text-xl font-black text-slate-900 dark:text-white">
+            {loginMode === 'admin' ? 'Super Admin Portal' : 'Sign In to Your Account'}
+          </h2>
           <p className="text-xs text-slate-500 dark:text-slate-400">
-            Access your patient appointments, doctor consultation queue, or admin dashboard.
+            {loginMode === 'admin'
+              ? 'Authorized hospital administrators only. Secure credentials required.'
+              : 'Enter your registered email and password to access your dashboard.'}
           </p>
         </div>
 
-        {/* 1-Click Quick Demo Switcher */}
-        <div className="p-4 rounded-2xl bg-blue-50/70 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-900 space-y-2">
-          <div className="flex items-center justify-between text-xs font-bold text-blue-900 dark:text-blue-200">
-            <span className="flex items-center gap-1.5">
-              <Sparkles className="w-3.5 h-3.5 text-blue-600" /> Quick 1-Click Demo Login
-            </span>
-            <span className="text-[10px] text-blue-600 dark:text-blue-400">Pre-seeded</span>
-          </div>
-
-          <div className="grid grid-cols-3 gap-2 pt-1">
-            <button
-              id="demo-login-patient"
-              type="button"
-              disabled={isLoading}
-              onClick={() => handleDemo('patient')}
-              className="px-2.5 py-2 rounded-xl bg-white dark:bg-slate-800 hover:bg-blue-600 hover:text-white dark:hover:bg-blue-600 border border-blue-200 dark:border-blue-800 text-[11px] font-bold text-slate-800 dark:text-slate-200 shadow-sm transition-all text-center flex flex-col items-center gap-1"
-            >
-              <User className="w-4 h-4 text-blue-600" />
-              <span>Patient</span>
-            </button>
-
-            <button
-              id="demo-login-doctor"
-              type="button"
-              disabled={isLoading}
-              onClick={() => handleDemo('doctor')}
-              className="px-2.5 py-2 rounded-xl bg-white dark:bg-slate-800 hover:bg-blue-600 hover:text-white dark:hover:bg-blue-600 border border-blue-200 dark:border-blue-800 text-[11px] font-bold text-slate-800 dark:text-slate-200 shadow-sm transition-all text-center flex flex-col items-center gap-1"
-            >
-              <Stethoscope className="w-4 h-4 text-indigo-600" />
-              <span>Doctor</span>
-            </button>
-
-            <button
-              id="demo-login-admin"
-              type="button"
-              disabled={isLoading}
-              onClick={() => handleDemo('admin')}
-              className="px-2.5 py-2 rounded-xl bg-white dark:bg-slate-800 hover:bg-blue-600 hover:text-white dark:hover:bg-blue-600 border border-blue-200 dark:border-blue-800 text-[11px] font-bold text-slate-800 dark:text-slate-200 shadow-sm transition-all text-center flex flex-col items-center gap-1"
-            >
-              <ShieldCheck className="w-4 h-4 text-blue-600" />
-              <span>Admin</span>
-            </button>
-          </div>
+        {/* Portal Mode Tabs */}
+        <div className="flex p-1 bg-slate-200/70 dark:bg-slate-800/80 rounded-2xl">
+          <button
+            id="tab-user-login"
+            type="button"
+            onClick={() => {
+              setLoginMode('user');
+              setError(null);
+            }}
+            className={`flex-1 py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
+              loginMode === 'user'
+                ? 'bg-white dark:bg-slate-900 text-blue-600 dark:text-blue-400 shadow-sm'
+                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
+            }`}
+          >
+            <User className="w-3.5 h-3.5" />
+            <span>Patient & Doctor</span>
+          </button>
+          <button
+            id="tab-admin-login"
+            type="button"
+            onClick={() => {
+              setLoginMode('admin');
+              setError(null);
+            }}
+            className={`flex-1 py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
+              loginMode === 'admin'
+                ? 'bg-white dark:bg-slate-900 text-indigo-600 dark:text-indigo-400 shadow-sm'
+                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
+            }`}
+          >
+            <ShieldCheck className="w-3.5 h-3.5" />
+            <span>Admin Portal</span>
+          </button>
         </div>
 
         {/* Standard Login Card */}
-        <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 p-6 sm:p-8 shadow-xl">
+        <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 p-6 sm:p-8 shadow-xl relative overflow-hidden">
+          {loginMode === 'admin' && (
+            <div className="mb-4 p-3 rounded-2xl bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-900 flex items-start gap-2.5 text-xs text-indigo-900 dark:text-indigo-200">
+              <ShieldCheck className="w-4 h-4 text-indigo-600 flex-shrink-0 mt-0.5" />
+              <div>
+                <p className="font-bold">Administrative Access Control</p>
+                <p className="text-[11px] text-indigo-700 dark:text-indigo-300">
+                  Manage doctors, patient slots, bank details, and payment settlement directly.
+                </p>
+              </div>
+            </div>
+          )}
+
           {error && (
-            <div className="mb-4 p-3 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900 text-rose-700 dark:text-rose-300 text-xs font-semibold">
-              {error}
+            <div className="mb-4 p-3.5 rounded-2xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900 text-rose-700 dark:text-rose-300 text-xs font-medium flex items-start gap-2.5">
+              <AlertCircle className="w-4 h-4 text-rose-600 flex-shrink-0 mt-0.5" />
+              <div>
+                <p className="font-bold">Login Failed</p>
+                <p className="text-[11px] mt-0.5">{error}</p>
+              </div>
             </div>
           )}
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1.5">
-                Email Address
+                {loginMode === 'admin' ? 'Admin Email / ID' : 'Email Address or Mobile'}
               </label>
               <div className="relative">
                 <input
                   id="login-email-input"
-                  type="email"
+                  type="text"
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="patient@example.com"
-                  className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-xs text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500"
+                  placeholder={loginMode === 'admin' ? 'admin@example.com' : 'patient@example.com'}
+                  className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-xs text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none"
                 />
                 <Mail className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
               </div>
@@ -192,14 +217,15 @@ export const LoginPage: React.FC = () => {
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  placeholder="••••••••"
-                  className="w-full pl-9 pr-9 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-xs text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500"
+                  placeholder="Enter your secure password"
+                  className="w-full pl-9 pr-9 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-xs text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none"
                 />
                 <Lock className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
                   className="absolute right-3 top-3 text-slate-400 hover:text-slate-600"
+                  aria-label="Toggle password visibility"
                 >
                   {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
@@ -210,23 +236,61 @@ export const LoginPage: React.FC = () => {
               id="login-submit-btn"
               type="submit"
               disabled={isLoading}
-              className="w-full py-3 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-lg shadow-blue-600/25 flex items-center justify-center gap-2 transition-all disabled:opacity-50"
+              className={`w-full py-3 rounded-2xl text-white font-bold text-xs shadow-lg flex items-center justify-center gap-2 transition-all disabled:opacity-50 ${
+                loginMode === 'admin'
+                  ? 'bg-indigo-600 hover:bg-indigo-700 shadow-indigo-600/25'
+                  : 'bg-blue-600 hover:bg-blue-700 shadow-blue-600/25'
+              }`}
             >
               {isLoading ? (
                 <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
               ) : (
                 <>
-                  <span>Sign In to MediCare</span>
+                  <span>{loginMode === 'admin' ? 'Secure Admin Login' : 'Sign In to Account'}</span>
                   <ArrowRight className="w-4 h-4" />
                 </>
               )}
             </button>
           </form>
 
-          <div className="mt-6 pt-4 border-t border-slate-100 dark:border-slate-800 text-center text-xs text-slate-500">
+          {/* Quick autofill helper for easy credential test */}
+          <div className="mt-5 pt-4 border-t border-slate-100 dark:border-slate-800 space-y-2">
+            <div className="flex items-center justify-between text-[11px] font-bold text-slate-500 dark:text-slate-400">
+              <span>Demo Account Credentials</span>
+              <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold">Click to autofill</span>
+            </div>
+            <div className="grid grid-cols-3 gap-1.5 text-[10px]">
+              <button
+                type="button"
+                onClick={() => fillCredentials('patient@example.com', 'Patient@123', 'user')}
+                className="p-1.5 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-blue-50 dark:hover:bg-blue-950/40 text-left transition-colors"
+              >
+                <p className="font-bold text-slate-800 dark:text-slate-200">Patient</p>
+                <p className="text-slate-400 truncate">Patient@123</p>
+              </button>
+              <button
+                type="button"
+                onClick={() => fillCredentials('doctor@example.com', 'Doctor@123', 'user')}
+                className="p-1.5 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-blue-50 dark:hover:bg-blue-950/40 text-left transition-colors"
+              >
+                <p className="font-bold text-slate-800 dark:text-slate-200">Doctor</p>
+                <p className="text-slate-400 truncate">Doctor@123</p>
+              </button>
+              <button
+                type="button"
+                onClick={() => fillCredentials('admin@example.com', 'Admin@123', 'admin')}
+                className="p-1.5 rounded-lg border border-indigo-200 dark:border-indigo-800 bg-indigo-50/50 dark:bg-indigo-950/30 hover:bg-indigo-100 text-left transition-colors"
+              >
+                <p className="font-bold text-indigo-700 dark:text-indigo-300">Admin</p>
+                <p className="text-indigo-500 truncate">Admin@123</p>
+              </button>
+            </div>
+          </div>
+
+          <div className="mt-4 text-center text-xs text-slate-500">
             Don't have an account yet?{' '}
             <Link to="/register" className="font-bold text-blue-600 dark:text-blue-400 hover:underline">
-              Create Account
+              Register New Account
             </Link>
           </div>
         </div>
@@ -250,7 +314,7 @@ export const LoginPage: React.FC = () => {
                 value={forgotEmail}
                 onChange={(e) => setForgotEmail(e.target.value)}
                 placeholder="patient@example.com"
-                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 text-xs bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white"
+                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 text-xs bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white outline-none"
               />
               <div className="flex gap-2 justify-end">
                 <button

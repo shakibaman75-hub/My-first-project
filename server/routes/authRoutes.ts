@@ -145,9 +145,17 @@ router.post('/login', async (req, res) => {
       return res.status(403).json({ success: false, message: 'Your account has been suspended by administration. Please contact support.' });
     }
 
-    // Verify password (or allow match if plaintext for test seeds if bcrypt fails)
-    const isPasswordValid = user.password ? await bcrypt.compare(password, user.password) : false;
-    if (!isPasswordValid && password !== 'Password123' && password !== 'Admin123') {
+    // Strict password verification against database hash
+    let isPasswordValid = false;
+    if (user.password) {
+      if (user.password.startsWith('$2a$') || user.password.startsWith('$2b$')) {
+        isPasswordValid = await bcrypt.compare(password, user.password);
+      } else {
+        isPasswordValid = user.password === password;
+      }
+    }
+
+    if (!isPasswordValid) {
       return res.status(401).json({ success: false, message: 'Invalid password. Please check your credentials.' });
     }
 

@@ -151,6 +151,18 @@ export const api = {
     method: 'POST',
     body: JSON.stringify(payload),
   }),
+  getBusinessSettings: () => request<{ success: boolean; settings: any }>('/payments/business-settings'),
+  updateBusinessSettings: (payload: any) => request<{ success: boolean; settings: any; message: string }>('/payments/business-settings', {
+    method: 'PUT',
+    body: JSON.stringify(payload),
+  }),
+  submitUpiProof: (payload: { appointmentId: string; utrNumber: string; payerUpiId?: string; screenshotNote?: string }) => request<{ success: boolean; message: string; appointment: IAppointment; payment: IPayment }>('/payments/submit-upi-proof', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  }),
+  confirmManualPayment: (paymentId: string) => request<{ success: boolean; message: string; payment: IPayment; appointment?: IAppointment }>(`/payments/${paymentId}/confirm-manual`, {
+    method: 'PUT',
+  }),
   getMyPayments: () => request<{ success: boolean; total: number; payments: IPayment[] }>('/payments/my'),
   getAllPayments: () => request<{ success: boolean; total: number; payments: IPayment[] }>('/payments/all'),
   getReceiptData: (appointmentId: string) => request<{ success: boolean; receipt: any }>(`/payments/receipt/${appointmentId}`),

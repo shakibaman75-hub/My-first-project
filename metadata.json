@@ -2,5 +2,7 @@
   "name": "MediCare — Hospital Appointment & Healthcare Management System",
   "description": "A complete, full-stack hospital appointment booking and healthcare management platform featuring patient, doctor, and admin portals, online payment processing, scheduling, and analytics.",
   "requestFramePermissions": [],
-  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
 }
