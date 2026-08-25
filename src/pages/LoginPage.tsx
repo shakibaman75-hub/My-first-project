@@ -39,14 +39,6 @@ export const LoginPage: React.FC = () => {
   const [forgotEmail, setForgotEmail] = useState('');
   const [isSendingForgot, setIsSendingForgot] = useState(false);
 
-  const fillCredentials = (userEmail: string, userPass: string, mode: 'user' | 'admin' = 'user') => {
-    setEmail(userEmail);
-    setPassword(userPass);
-    setLoginMode(mode);
-    setError(null);
-    showToast('Credentials Filled', 'Click Sign In to authenticate securely.', 'info');
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email.trim() || !password) {
@@ -253,41 +245,7 @@ export const LoginPage: React.FC = () => {
             </button>
           </form>
 
-          {/* Quick autofill helper for easy credential test */}
-          <div className="mt-5 pt-4 border-t border-slate-100 dark:border-slate-800 space-y-2">
-            <div className="flex items-center justify-between text-[11px] font-bold text-slate-500 dark:text-slate-400">
-              <span>Demo Account Credentials</span>
-              <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold">Click to autofill</span>
-            </div>
-            <div className="grid grid-cols-3 gap-1.5 text-[10px]">
-              <button
-                type="button"
-                onClick={() => fillCredentials('patient@example.com', 'Patient@123', 'user')}
-                className="p-1.5 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-blue-50 dark:hover:bg-blue-950/40 text-left transition-colors"
-              >
-                <p className="font-bold text-slate-800 dark:text-slate-200">Patient</p>
-                <p className="text-slate-400 truncate">Patient@123</p>
-              </button>
-              <button
-                type="button"
-                onClick={() => fillCredentials('doctor@example.com', 'Doctor@123', 'user')}
-                className="p-1.5 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-blue-50 dark:hover:bg-blue-950/40 text-left transition-colors"
-              >
-                <p className="font-bold text-slate-800 dark:text-slate-200">Doctor</p>
-                <p className="text-slate-400 truncate">Doctor@123</p>
-              </button>
-              <button
-                type="button"
-                onClick={() => fillCredentials('admin@example.com', 'Admin@123', 'admin')}
-                className="p-1.5 rounded-lg border border-indigo-200 dark:border-indigo-800 bg-indigo-50/50 dark:bg-indigo-950/30 hover:bg-indigo-100 text-left transition-colors"
-              >
-                <p className="font-bold text-indigo-700 dark:text-indigo-300">Admin</p>
-                <p className="text-indigo-500 truncate">Admin@123</p>
-              </button>
-            </div>
-          </div>
-
-          <div className="mt-4 text-center text-xs text-slate-500">
+          <div className="mt-6 text-center text-xs text-slate-500">
             Don't have an account yet?{' '}
             <Link to="/register" className="font-bold text-blue-600 dark:text-blue-400 hover:underline">
               Register New Account
