@@ -46,11 +46,11 @@ class DatabaseStore {
     this.seedInitialData();
   }
 
-  async seedInitialData() {
-    const salt = await bcrypt.genSalt(10);
-    const patientHash = await bcrypt.hash('Patient@123', salt);
-    const doctorHash = await bcrypt.hash('Doctor@123', salt);
-    const adminHash = await bcrypt.hash('Admin@123', salt);
+  seedInitialData() {
+    const salt = bcrypt.genSaltSync(10);
+    const patientHash = bcrypt.hashSync('Patient@123', salt);
+    const doctorHash = bcrypt.hashSync('Doctor@123', salt);
+    const adminHash = bcrypt.hashSync('Admin@123', salt);
 
     // 1. Initial Hospitals
     this.hospitals = [
