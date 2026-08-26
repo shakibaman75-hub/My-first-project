@@ -67,14 +67,29 @@ function handleClientFallback(endpoint: string, options: RequestInit = {}): any 
   if (endpoint === '/auth/register' && method === 'POST') {
     const { name, email, phone, role = 'patient', specialization, hospitalId, consultationFee } = body;
     const cleanEmail = (email || '').toLowerCase().trim();
-    const existing = db.users.find((u) => u.email.toLowerCase() === cleanEmail);
-    if (existing) {
-      throw new Error('An account with this email already exists.');
+    const cleanPhone = (phone || '').replace(/[^0-9]/g, '').trim();
+
+    // 1. Check duplicate Email
+    const existingEmail = db.users.find((u) => u.email.toLowerCase().trim() === cleanEmail);
+    if (existingEmail) {
+      throw new Error('This email is already registered. Please login or use a different email.');
+    }
+
+    // 2. Check duplicate Phone Number
+    if (cleanPhone.length >= 10) {
+      const existingPhone = db.users.find((u) => {
+        const uPhone = (u.phone || '').replace(/[^0-9]/g, '').trim();
+        return uPhone.length >= 10 && (uPhone.endsWith(cleanPhone) || cleanPhone.endsWith(uPhone));
+      });
+      if (existingPhone) {
+        throw new Error('This mobile number is already registered. Please login or use a different mobile number.');
+      }
     }
 
     const newUserId = 'usr_' + Date.now();
     const newUser: IUser = {
       _id: newUserId,
+      id: newUserId,
       name: name.trim(),
       email: cleanEmail,
       phone: phone?.trim() || '+91 98000 00000',
@@ -86,10 +101,22 @@ function handleClientFallback(endpoint: string, options: RequestInit = {}): any 
       gender: body.gender || 'Male',
       address: body.address || 'New Delhi',
       city: body.city || 'New Delhi',
+      isActive: true,
       isBlocked: false,
       createdAt: new Date().toISOString(),
     };
     db.users.push(newUser);
+
+    // Also add system log for admin visibility
+    if (!db.systemLogs) db.systemLogs = [];
+    db.systemLogs.unshift({
+      _id: 'log_' + Date.now(),
+      action: 'USER_REGISTERED',
+      userName: newUser.name,
+      userRole: newUser.role,
+      details: `New account registered (${newUser.role}): ${newUser.email} | Phone: ${newUser.phone}`,
+      timestamp: new Date().toISOString(),
+    });
 
     let doctorProfile: IDoctor | undefined;
     if (role === 'doctor') {

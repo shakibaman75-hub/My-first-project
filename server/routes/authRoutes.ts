@@ -34,9 +34,30 @@ router.post('/register', async (req, res) => {
       return res.status(400).json({ success: false, message: 'Please provide all required fields (Name, Email, Phone, Password).' });
     }
 
-    const existingUser = db.users.find((u) => u.email.toLowerCase() === email.toLowerCase().trim());
-    if (existingUser) {
-      return res.status(400).json({ success: false, message: 'An account with this email already exists. Please log in.' });
+    const cleanEmail = email.toLowerCase().trim();
+    const cleanPhone = phone.replace(/[^0-9]/g, '').trim();
+
+    // Check if email already exists
+    const existingEmailUser = db.users.find((u) => u.email.toLowerCase().trim() === cleanEmail);
+    if (existingEmailUser) {
+      return res.status(400).json({
+        success: false,
+        message: 'This email is already registered. Please login with your password or use a different email.'
+      });
+    }
+
+    // Check if phone number already exists
+    if (cleanPhone.length >= 10) {
+      const existingPhoneUser = db.users.find((u) => {
+        const uPhone = (u.phone || '').replace(/[^0-9]/g, '').trim();
+        return uPhone.length >= 10 && (uPhone.endsWith(cleanPhone) || cleanPhone.endsWith(uPhone));
+      });
+      if (existingPhoneUser) {
+        return res.status(400).json({
+          success: false,
+          message: 'This mobile number is already registered with an account. Please login or use a different mobile number.'
+        });
+      }
     }
 
     const salt = await bcrypt.genSalt(10);

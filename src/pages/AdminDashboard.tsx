@@ -79,6 +79,11 @@ export const AdminDashboard: React.FC = () => {
   const [appStatusFilter, setAppStatusFilter] = useState('All');
   const [appSearch, setAppSearch] = useState('');
 
+  // Filter state for users
+  const [userSearch, setUserSearch] = useState('');
+  const [userRoleFilter, setUserRoleFilter] = useState<'All' | 'patient' | 'doctor' | 'admin'>('All');
+  const [selectedUserDetail, setSelectedUserDetail] = useState<IUser | null>(null);
+
   // Selected appointment for detail inspection & confirmation
   const [selectedAppointment, setSelectedAppointment] = useState<IAppointment | null>(null);
   const [actionLoadingId, setActionLoadingId] = useState<string | null>(null);
@@ -417,6 +422,20 @@ export const AdminDashboard: React.FC = () => {
         a.patientPhone?.toLowerCase().includes(q) ||
         a.tokenNumber?.toLowerCase().includes(q) ||
         a.hospitalName?.toLowerCase().includes(q);
+      if (!match) return false;
+    }
+    return true;
+  });
+
+  const filteredUsers = users.filter((u) => {
+    if (userRoleFilter !== 'All' && u.role !== userRoleFilter) return false;
+    if (userSearch.trim()) {
+      const q = userSearch.toLowerCase().trim();
+      const match =
+        u.name.toLowerCase().includes(q) ||
+        u.email.toLowerCase().includes(q) ||
+        (u.phone && u.phone.includes(q)) ||
+        (u.city && u.city.toLowerCase().includes(q));
       if (!match) return false;
     }
     return true;
@@ -1075,56 +1094,258 @@ export const AdminDashboard: React.FC = () => {
 
         {/* TAB 5: USERS DIRECTORY */}
         {activeTab === 'users' && (
-          <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm">
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs">
-                <thead className="bg-slate-50 dark:bg-slate-800/80 text-slate-400 uppercase font-bold text-[10px] border-b border-slate-100 dark:border-slate-800">
-                  <tr>
-                    <th className="p-4">User Name</th>
-                    <th className="p-4">Email</th>
-                    <th className="p-4">Phone</th>
-                    <th className="p-4">Role</th>
-                    <th className="p-4">Status</th>
-                    <th className="p-4 text-right">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                  {users.map((u) => (
-                    <tr key={u.id || u._id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/30">
-                      <td className="p-4 font-bold text-slate-900 dark:text-white">{u.name}</td>
-                      <td className="p-4 text-slate-600 dark:text-slate-300">{u.email}</td>
-                      <td className="p-4 text-slate-500">{u.phone || '-'}</td>
-                      <td className="p-4">
-                        <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase ${
-                          u.role === 'admin' ? 'bg-blue-100 text-blue-800' :
-                          u.role === 'doctor' ? 'bg-indigo-100 text-indigo-800' : 'bg-blue-50 text-blue-700'
-                        }`}>
-                          {u.role}
-                        </span>
-                      </td>
-                      <td className="p-4">
-                        <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
-                          u.isActive ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'
-                        }`}>
-                          {u.isActive ? 'Active' : 'Disabled'}
-                        </span>
-                      </td>
-                      <td className="p-4 text-right">
-                        {u.role !== 'admin' && (
-                          <button
-                            onClick={() => handleToggleUserActive(u)}
-                            className={`px-3 py-1 rounded-lg text-[11px] font-semibold border ${
-                              u.isActive ? 'text-rose-600 border-rose-200' : 'text-emerald-600 border-emerald-200'
-                            }`}
-                          >
-                            {u.isActive ? 'Deactivate' : 'Activate'}
-                          </button>
-                        )}
-                      </td>
+          <div className="space-y-4">
+            {/* Search & Filter Header */}
+            <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 p-4 sm:p-6 shadow-sm flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-4">
+              <div className="flex flex-wrap items-center gap-2">
+                {(['All', 'patient', 'doctor', 'admin'] as const).map((r) => {
+                  const count = r === 'All' ? users.length : users.filter((u) => u.role === r).length;
+                  return (
+                    <button
+                      key={r}
+                      onClick={() => setUserRoleFilter(r)}
+                      className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
+                        userRoleFilter === r
+                          ? 'bg-blue-600 text-white shadow-md shadow-blue-500/20'
+                          : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200'
+                      }`}
+                    >
+                      <span className="capitalize">{r === 'All' ? 'All Users' : r + 's'}</span>
+                      <span className={`px-1.5 py-0.2 text-[10px] rounded-full font-black ${
+                        userRoleFilter === r ? 'bg-white/20 text-white' : 'bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200'
+                      }`}>
+                        {count}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+
+              <div className="relative min-w-[260px]">
+                <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                <input
+                  type="text"
+                  placeholder="Search by name, email, or phone..."
+                  value={userSearch}
+                  onChange={(e) => setUserSearch(e.target.value)}
+                  className="w-full pl-9 pr-4 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 text-xs text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                />
+              </div>
+            </div>
+
+            {/* Users Table */}
+            <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm">
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-xs">
+                  <thead className="bg-slate-50 dark:bg-slate-800/80 text-slate-400 uppercase font-bold text-[10px] border-b border-slate-100 dark:border-slate-800">
+                    <tr>
+                      <th className="p-4">User / Patient</th>
+                      <th className="p-4">Email & Phone</th>
+                      <th className="p-4">Location</th>
+                      <th className="p-4">Role</th>
+                      <th className="p-4">Registered Date</th>
+                      <th className="p-4">Bookings</th>
+                      <th className="p-4">Account Status</th>
+                      <th className="p-4 text-right">Actions</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                    {filteredUsers.length === 0 ? (
+                      <tr>
+                        <td colSpan={8} className="p-8 text-center text-slate-400">
+                          No users found matching your search criteria.
+                        </td>
+                      </tr>
+                    ) : (
+                      filteredUsers.map((u) => {
+                        const userAppointments = appointments.filter((a) => a.patientId === (u.id || u._id) || a.patientEmail === u.email);
+                        const isDoc = u.role === 'doctor';
+                        const isAdmin = u.role === 'admin';
+                        const isBlocked = u.isBlocked || u.isActive === false;
+
+                        return (
+                          <tr key={u.id || u._id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors">
+                            <td className="p-4">
+                              <div className="flex items-center gap-3">
+                                <img
+                                  src={u.profileImage || (isDoc ? 'https://images.unsplash.com/photo-1594824813620-424a1b0266bf?auto=format&fit=crop&w=150&q=80' : 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=150&q=80')}
+                                  alt={u.name}
+                                  className="w-10 h-10 rounded-xl object-cover border border-slate-200 dark:border-slate-700 shrink-0"
+                                />
+                                <div>
+                                  <p className="font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
+                                    {u.name}
+                                    {isAdmin && <ShieldCheck className="w-3.5 h-3.5 text-blue-600" />}
+                                    {isDoc && <Stethoscope className="w-3.5 h-3.5 text-indigo-600" />}
+                                  </p>
+                                  <p className="text-[11px] text-slate-400 font-mono">ID: {(u.id || u._id).slice(-8)}</p>
+                                </div>
+                              </div>
+                            </td>
+                            <td className="p-4 space-y-0.5">
+                              <p className="text-slate-700 dark:text-slate-200 font-medium">{u.email}</p>
+                              <p className="text-slate-400 text-[11px]">{u.phone || 'No phone registered'}</p>
+                            </td>
+                            <td className="p-4 text-slate-600 dark:text-slate-300">
+                              {u.city || u.address ? `${u.city || ''} ${u.address ? `• ${u.address.slice(0, 20)}...` : ''}` : 'India'}
+                            </td>
+                            <td className="p-4">
+                              <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${
+                                isAdmin ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300 border border-blue-200 dark:border-blue-800' :
+                                isDoc ? 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900/40 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800' :
+                                'bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700'
+                              }`}>
+                                {u.role}
+                              </span>
+                            </td>
+                            <td className="p-4 text-slate-500 text-[11px]">
+                              {u.createdAt ? new Date(u.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : 'Jan 2025'}
+                            </td>
+                            <td className="p-4">
+                              {isDoc ? (
+                                <span className="text-[11px] text-indigo-600 dark:text-indigo-400 font-semibold">Doctor Portal</span>
+                              ) : (
+                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 font-bold text-[11px]">
+                                  <Calendar className="w-3 h-3" />
+                                  {userAppointments.length} OPD Slots
+                                </span>
+                              )}
+                            </td>
+                            <td className="p-4">
+                              <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold flex items-center gap-1 w-fit ${
+                                !isBlocked
+                                  ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800'
+                                  : 'bg-rose-100 text-rose-800 dark:bg-rose-950/40 dark:text-rose-300 border border-rose-200 dark:border-rose-800'
+                              }`}>
+                                {!isBlocked ? <CheckCircle2 className="w-3 h-3" /> : <XCircle className="w-3 h-3" />}
+                                {!isBlocked ? 'Active' : 'Suspended'}
+                              </span>
+                            </td>
+                            <td className="p-4 text-right">
+                              <div className="flex items-center justify-end gap-1.5">
+                                <button
+                                  onClick={() => setSelectedUserDetail(u)}
+                                  className="px-2.5 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 text-xs font-semibold flex items-center gap-1 transition-colors"
+                                  title="View full user profile & history"
+                                >
+                                  <Eye className="w-3.5 h-3.5 text-blue-600" />
+                                  <span>Details</span>
+                                </button>
+                                {!isAdmin && (
+                                  <button
+                                    onClick={() => handleToggleUserActive(u)}
+                                    className={`px-3 py-1.5 rounded-xl text-xs font-bold border transition-all ${
+                                      !isBlocked
+                                        ? 'text-rose-600 border-rose-200 hover:bg-rose-50 dark:hover:bg-rose-950/30'
+                                        : 'text-emerald-600 border-emerald-200 hover:bg-emerald-50 dark:hover:bg-emerald-950/30'
+                                    }`}
+                                  >
+                                    {!isBlocked ? 'Block' : 'Unblock'}
+                                  </button>
+                                )}
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* USER DETAILS INSPECTION MODAL */}
+        {selectedUserDetail && (
+          <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+            <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 max-w-lg w-full p-6 space-y-6 shadow-2xl animate-in fade-in zoom-in-95 duration-150">
+              <div className="flex justify-between items-start">
+                <div className="flex items-center gap-3">
+                  <img
+                    src={selectedUserDetail.profileImage || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=150&q=80'}
+                    alt={selectedUserDetail.name}
+                    className="w-12 h-12 rounded-2xl object-cover border border-slate-200 dark:border-slate-700"
+                  />
+                  <div>
+                    <h3 className="font-extrabold text-base text-slate-900 dark:text-white flex items-center gap-2">
+                      {selectedUserDetail.name}
+                      <span className="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
+                        {selectedUserDetail.role}
+                      </span>
+                    </h3>
+                    <p className="text-xs text-slate-400 font-mono">User ID: {selectedUserDetail.id || selectedUserDetail._id}</p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setSelectedUserDetail(null)}
+                  className="p-1.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3 text-xs bg-slate-50 dark:bg-slate-800/50 p-4 rounded-2xl border border-slate-100 dark:border-slate-800">
+                <div>
+                  <p className="text-slate-400 font-semibold">Email Address</p>
+                  <p className="font-bold text-slate-900 dark:text-white">{selectedUserDetail.email}</p>
+                </div>
+                <div>
+                  <p className="text-slate-400 font-semibold">Mobile Phone</p>
+                  <p className="font-bold text-slate-900 dark:text-white">{selectedUserDetail.phone || 'Not provided'}</p>
+                </div>
+                <div>
+                  <p className="text-slate-400 font-semibold">City</p>
+                  <p className="font-bold text-slate-900 dark:text-white">{selectedUserDetail.city || 'New Delhi'}</p>
+                </div>
+                <div>
+                  <p className="text-slate-400 font-semibold">Gender</p>
+                  <p className="font-bold text-slate-900 dark:text-white">{selectedUserDetail.gender || 'Not specified'}</p>
+                </div>
+                <div>
+                  <p className="text-slate-400 font-semibold">Date of Birth</p>
+                  <p className="font-bold text-slate-900 dark:text-white">{selectedUserDetail.dateOfBirth || 'Not provided'}</p>
+                </div>
+                <div>
+                  <p className="text-slate-400 font-semibold">Member Since</p>
+                  <p className="font-bold text-slate-900 dark:text-white">
+                    {selectedUserDetail.createdAt ? new Date(selectedUserDetail.createdAt).toLocaleDateString('en-IN') : 'Jan 2025'}
+                  </p>
+                </div>
+              </div>
+
+              {/* User Appointments Summary */}
+              <div className="space-y-2">
+                <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400">
+                  Booked Appointments ({appointments.filter((a) => a.patientId === (selectedUserDetail.id || selectedUserDetail._id) || a.patientEmail === selectedUserDetail.email).length})
+                </h4>
+                <div className="max-h-40 overflow-y-auto space-y-2">
+                  {appointments
+                    .filter((a) => a.patientId === (selectedUserDetail.id || selectedUserDetail._id) || a.patientEmail === selectedUserDetail.email)
+                    .map((a) => (
+                      <div key={a._id} className="p-2.5 rounded-xl border border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-800/80 flex justify-between items-center text-xs">
+                        <div>
+                          <p className="font-bold text-slate-900 dark:text-white">{a.doctorName}</p>
+                          <p className="text-[11px] text-slate-400">{a.appointmentDate} at {a.appointmentTime} • {a.tokenNumber || 'Token'}</p>
+                        </div>
+                        <span className={`px-2 py-0.5 rounded-md text-[10px] font-bold ${
+                          a.status === 'confirmed' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'
+                        }`}>
+                          {a.status}
+                        </span>
+                      </div>
+                    ))}
+                </div>
+              </div>
+
+              <div className="flex justify-end pt-2">
+                <button
+                  onClick={() => setSelectedUserDetail(null)}
+                  className="px-4 py-2 rounded-xl bg-slate-900 dark:bg-white text-white dark:text-slate-900 text-xs font-bold"
+                >
+                  Close Profile
+                </button>
+              </div>
             </div>
           </div>
         )}
